@@ -43,8 +43,8 @@ artifact is a self-contained module, not a rewrite.
 | Artifact | Status |
 | --- | --- |
 | **LNK** (MS-SHLLINK) | ✅ target path, arguments, tracker-block provenance (builder machine ID + MAC) |
+| **EVTX** (Windows Event Log) | ✅ full BinXML + template-instance substitution engine; tailored descriptions for logons, process creation, service installs, Kerberos tickets, log clearing, Sysmon 1/3, + generic fallback for every other EventID |
 | **Prefetch** | planned |
-| **EVTX** (Windows Event Log) | planned |
 | **Amcache / ShimCache** | planned |
 | **MFT** ($MFT) | planned |
 | **Registry hives** (SYSTEM/SOFTWARE/SAM/NTUSER) | planned |
@@ -113,8 +113,9 @@ never aborts a collection run.
 | Module | Role |
 | --- | --- |
 | `timeline/` | The normalized event model + JSONL/CSV writers |
-| `artifacts/reader.rs` | Bounds-checked little-endian byte reader shared by every parser |
+| `artifacts/reader.rs` | Bounds-checked little-endian byte reader (offset-based `Reader` + sequential `Cursor`) shared by every parser |
 | `artifacts/lnk.rs` | MS-SHLLINK parser |
+| `artifacts/evtx.rs` | EVTX parser — file/chunk/record walking, full BinXML tokenizer, template-instance substitution |
 | `main.rs` | CLI (`collect`, `parse-lnk`) |
 
 ## License
