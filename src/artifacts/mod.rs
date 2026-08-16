@@ -1,5 +1,6 @@
 pub mod evtx;
 pub mod lnk;
+pub mod mft;
 pub mod reader;
 
 use std::path::Path;

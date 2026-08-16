@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 
 use artifacts::evtx::EvtxParser;
 use artifacts::lnk::LnkParser;
+use artifacts::mft::MftParser;
 use artifacts::ArtifactParser;
 use timeline::TimelineEvent;
 
@@ -55,7 +56,11 @@ fn main() -> Result<()> {
 }
 
 fn collect(input: &PathBuf, out: &Path, format: OutputFormat) -> Result<()> {
-    let parsers: Vec<Box<dyn ArtifactParser>> = vec![Box::new(LnkParser), Box::new(EvtxParser)];
+    let parsers: Vec<Box<dyn ArtifactParser>> = vec![
+        Box::new(LnkParser),
+        Box::new(EvtxParser),
+        Box::new(MftParser),
+    ];
     let mut events: Vec<TimelineEvent> = Vec::new();
     let mut files_seen = 0usize;
 

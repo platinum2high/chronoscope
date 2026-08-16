@@ -44,9 +44,9 @@ artifact is a self-contained module, not a rewrite.
 | --- | --- |
 | **LNK** (MS-SHLLINK) | ✅ target path, arguments, tracker-block provenance (builder machine ID + MAC) |
 | **EVTX** (Windows Event Log) | ✅ full BinXML + template-instance substitution engine; tailored descriptions for logons, process creation, service installs, Kerberos tickets, log clearing, Sysmon 1/3, + generic fallback for every other EventID |
+| **MFT** ($MFT) | ✅ $STANDARD_INFORMATION MACB timestamps + $FILE_NAME, update-sequence fixup, flags $SI/$FN creation-time mismatch (timestomp indicator) |
 | **Prefetch** | planned |
 | **Amcache / ShimCache** | planned |
-| **MFT** ($MFT) | planned |
 | **Registry hives** (SYSTEM/SOFTWARE/SAM/NTUSER) | planned |
 | **Jump Lists** | planned |
 | **Browser history** | planned |
@@ -116,6 +116,7 @@ never aborts a collection run.
 | `artifacts/reader.rs` | Bounds-checked little-endian byte reader (offset-based `Reader` + sequential `Cursor`) shared by every parser |
 | `artifacts/lnk.rs` | MS-SHLLINK parser |
 | `artifacts/evtx.rs` | EVTX parser — file/chunk/record walking, full BinXML tokenizer, template-instance substitution |
+| `artifacts/mft.rs` | $MFT parser — FILE record fixup, $STANDARD_INFORMATION / $FILE_NAME, timestomp detection |
 | `main.rs` | CLI (`collect`, `parse-lnk`) |
 
 ## License
