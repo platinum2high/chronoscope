@@ -1,3 +1,10 @@
+// `chunks_exact(2)` here is decoding fixed-width UTF-16LE/other 2-byte
+// fields; `as_chunks` (clippy's suggested replacement) stabilized only on
+// some recent `stable` releases, and CI tracks a floating `stable`
+// toolchain — pinning to the older, universally-stable API avoids a
+// toolchain-version-dependent build break.
+#![allow(unknown_lints, clippy::chunks_exact_to_as_chunks)]
+
 mod artifacts;
 mod timeline;
 
