@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 use artifacts::evtx::EvtxParser;
 use artifacts::lnk::LnkParser;
 use artifacts::mft::MftParser;
+use artifacts::prefetch::PrefetchParser;
 use artifacts::ArtifactParser;
 use timeline::TimelineEvent;
 
@@ -39,6 +40,9 @@ enum Command {
     /// Parse a single .lnk file and print its timeline event as JSON —
     /// useful for debugging one shortcut without a full collection run.
     ParseLnk { path: PathBuf },
+    /// Parse a single .pf file and print its timeline event(s) as JSON —
+    /// useful for debugging one prefetch file without a full collection run.
+    ParsePrefetch { path: PathBuf },
 }
 
 #[derive(clap::ValueEnum, Clone)]
@@ -52,6 +56,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Collect { input, out, format } => collect(&input, &out, format),
         Command::ParseLnk { path } => parse_lnk(&path),
+        Command::ParsePrefetch { path } => parse_prefetch(&path),
     }
 }
 
@@ -60,6 +65,7 @@ fn collect(input: &PathBuf, out: &Path, format: OutputFormat) -> Result<()> {
         Box::new(LnkParser),
         Box::new(EvtxParser),
         Box::new(MftParser),
+        Box::new(PrefetchParser),
     ];
     let mut events: Vec<TimelineEvent> = Vec::new();
     let mut files_seen = 0usize;
@@ -109,6 +115,18 @@ fn parse_lnk(path: &PathBuf) -> Result<()> {
     let parser = LnkParser;
     if !parser.matches(&raw) {
         anyhow::bail!("{} does not look like a .lnk file", path.display());
+    }
+    for event in parser.parse(&raw, path) {
+        println!("{}", serde_json::to_string_pretty(&event)?);
+    }
+    Ok(())
+}
+
+fn parse_prefetch(path: &PathBuf) -> Result<()> {
+    let raw = std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
+    let parser = PrefetchParser;
+    if !parser.matches(&raw) {
+        anyhow::bail!("{} does not look like a Prefetch file", path.display());
     }
     for event in parser.parse(&raw, path) {
         println!("{}", serde_json::to_string_pretty(&event)?);

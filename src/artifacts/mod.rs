@@ -1,7 +1,9 @@
 pub mod evtx;
 pub mod lnk;
 pub mod mft;
+pub mod prefetch;
 pub mod reader;
+pub mod xpress;
 
 use std::path::Path;
 

@@ -40,14 +40,32 @@ const ATTR_END: u32 = 0xFFFF_FFFF;
 
 const FILETIME_EPOCH_OFFSET: i64 = 116_444_736_000_000_000;
 
+/// Converts a raw NTFS/Windows FILETIME (100ns ticks since 1601-01-01)
+/// to UTC.
+///
+/// Only `ft == 0` is rejected as the "never set" sentinel (or, cast to
+/// `i64`, a `ft` so large it wrapped negative — an impossible date far
+/// beyond year 30828 that can only be corrupt/hostile input). A FILETIME
+/// that lands *before* the Unix epoch (1601-1970) is a real, if rare,
+/// date — a prior version of this function rejected any `ft` at or
+/// below the 1970 epoch offset as invalid, which silently dropped that
+/// timestamp from the timeline entirely. That's a real gap for a DFIR
+/// tool specifically: setting a file's creation time to on or before
+/// the Unix epoch is a known timestomping pattern (it's an
+/// attention-grabbing value some tools default to, and some naive
+/// timeline viewers mishandle it), so hiding it defeats the point.
+/// `div_euclid`/`rem_euclid` (rather than plain `/`/`%`) are required
+/// once `unix_100ns` can be negative, to get a correctly-signed
+/// `(secs, nanos)` pair instead of a negative `nanos` silently
+/// wrapping into a bogus huge value when cast to `u32`.
 fn filetime_to_datetime(ft: u64) -> Option<DateTime<Utc>> {
     let ft = ft as i64;
-    if ft <= FILETIME_EPOCH_OFFSET {
+    if ft <= 0 {
         return None;
     }
     let unix_100ns = ft - FILETIME_EPOCH_OFFSET;
-    let secs = unix_100ns / 10_000_000;
-    let nanos = ((unix_100ns % 10_000_000) * 100) as u32;
+    let secs = unix_100ns.div_euclid(10_000_000);
+    let nanos = (unix_100ns.rem_euclid(10_000_000) * 100) as u32;
     Utc.timestamp_opt(secs, nanos).single()
 }
 

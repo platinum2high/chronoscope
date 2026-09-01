@@ -290,14 +290,19 @@ fn uuid_v1_mac(guid: &[u8]) -> Option<String> {
     )
 }
 
+/// See `mft.rs`'s `filetime_to_datetime` for why the guard is `ft <= 0`
+/// (only the "never set" sentinel / an impossible wrapped-negative
+/// value) rather than rejecting every pre-1970 FILETIME, and why
+/// `div_euclid`/`rem_euclid` are required once `unix_100ns` can be
+/// negative.
 fn filetime_to_datetime(ft: u64) -> Option<DateTime<Utc>> {
     let ft = ft as i64;
-    if ft <= FILETIME_EPOCH_OFFSET {
+    if ft <= 0 {
         return None;
     }
     let unix_100ns = ft - FILETIME_EPOCH_OFFSET;
-    let secs = unix_100ns / 10_000_000;
-    let nanos = ((unix_100ns % 10_000_000) * 100) as u32;
+    let secs = unix_100ns.div_euclid(10_000_000);
+    let nanos = (unix_100ns.rem_euclid(10_000_000) * 100) as u32;
     Utc.timestamp_opt(secs, nanos).single()
 }
 
