@@ -13,3 +13,6 @@ Source: [log2timeline/plaso](https://github.com/log2timeline/plaso) `test_data/`
   (the last one exercises unpaired UTF-16 surrogate handling)
 - `mft/MFT` — a real `$MFT` extract, used to validate MACB timeline
   extraction and `$SI`/`$FN` timestomp detection against a live filesystem
+- `amcache/Amcache.hve` — a real Windows Server 2022 Amcache hive from
+  an unrelated CTF lab build (not plaso test data; see its own
+  `README.md` for provenance and how its ground truth was established)
