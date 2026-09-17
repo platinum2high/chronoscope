@@ -35,19 +35,19 @@ detection rule once you know what you're looking for.
 
 ## Status
 
-Early — one artifact parser is live, the rest are actively being
-built out. Nothing here is a KAPE replacement yet; the architecture
-(one trait, one timeline model, one CLI) is built so adding an
-artifact is a self-contained module, not a rewrite.
+Early — five artifact parsers are live, more are actively being built
+out. Nothing here is a KAPE replacement yet; the architecture (one
+trait, one timeline model, one CLI) is built so adding an artifact is
+a self-contained module, not a rewrite.
 
 | Artifact | Status |
 | --- | --- |
 | **LNK** (MS-SHLLINK) | ✅ target path, arguments, tracker-block provenance (builder machine ID + MAC) |
 | **EVTX** (Windows Event Log) | ✅ full BinXML + template-instance substitution engine; tailored descriptions for logons, process creation, service installs, Kerberos tickets, log clearing, Sysmon 1/3, + generic fallback for every other EventID |
 | **MFT** ($MFT) | ✅ $STANDARD_INFORMATION MACB timestamps + $FILE_NAME, update-sequence fixup, flags $SI/$FN creation-time mismatch (timestomp indicator) |
-| **Prefetch** | planned |
-| **Amcache / ShimCache** | planned |
-| **Registry hives** (SYSTEM/SOFTWARE/SAM/NTUSER) | planned |
+| **Prefetch** | ✅ SCCA v17–v31 + hand-rolled LZXPRESS Huffman decompression for Win10/11's `MAM`-wrapped files; flags run-count/last-run and filename-hash inconsistencies |
+| **Amcache** | ✅ from-scratch REGF hive reader (`InventoryApplicationFile` execution/file evidence with SHA-1 + PE metadata, `InventoryDevicePnp`/`InventoryDeviceContainer` device history); driver/shortcut categories not yet covered |
+| **ShimCache**, **registry hives** (SYSTEM/SOFTWARE/SAM/NTUSER) | planned — builds on the REGF reader Amcache already added |
 | **Jump Lists** | planned |
 | **Browser history** | planned |
 
@@ -69,8 +69,10 @@ chronoscope collect ./triage-export --out timeline.jsonl
 # CSV instead, for Timeline Explorer-style workflows
 chronoscope collect ./triage-export --out timeline.csv --format csv
 
-# Debug a single shortcut
+# Debug a single artifact without a full collection run
 chronoscope parse-lnk suspicious.lnk
+chronoscope parse-prefetch NOTEPAD.EXE-D8414F97.pf
+chronoscope parse-amcache Amcache.hve
 ```
 
 Example event:
@@ -117,7 +119,10 @@ never aborts a collection run.
 | `artifacts/lnk.rs` | MS-SHLLINK parser |
 | `artifacts/evtx.rs` | EVTX parser — file/chunk/record walking, full BinXML tokenizer, template-instance substitution |
 | `artifacts/mft.rs` | $MFT parser — FILE record fixup, $STANDARD_INFORMATION / $FILE_NAME, timestomp detection |
-| `main.rs` | CLI (`collect`, `parse-lnk`) |
+| `artifacts/prefetch.rs` + `artifacts/xpress.rs` | Prefetch parser + the LZXPRESS Huffman decompressor its Win10/11 format needs |
+| `artifacts/regf.rs` | Generic Windows Registry hive (REGF) reader — cells, key/value nodes, subkey lists, big-data reassembly; not artifact-specific, any future hive-based parser reuses it |
+| `artifacts/amcache.rs` | Amcache parser, built on `regf.rs` |
+| `main.rs` | CLI (`collect`, `parse-lnk`, `parse-prefetch`, `parse-amcache`) |
 
 ## License
 
